@@ -1,0 +1,97 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:batch="http://www.springframework.org/schema/batch" xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+	xsi:schemaLocation="http://www.springframework.org/schema/batch
+		http://www.springframework.org/schema/batch/spring-batch-3.0.xsd
+		http://www.springframework.org/schema/data/mongo
+        http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd
+        http://www.springframework.org/schema/rabbit 
+        http://www.springframework.org/schema/rabbit/spring-rabbit-1.0.xsd
+		http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans-4.0.xsd">
+
+
+	<!-- connect to MySQL database -->
+	<bean id="dataSource"
+		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName" value="${spring.datasource.driverClassName}" />
+		<property name="url" value="${spring.datasource.url}" />
+		<property name="username" value="${spring.datasource.username}" />
+		<property name="password" value="${spring.datasource.password}" />
+	</bean>
+
+
+	<bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+
+	<!-- <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager" 
+		scope="singleton"> <property name="dataSource" ref="dataSource" /> </bean> 
+		<tx:annotation-driven transaction-manager="transactionManager"/> -->
+
+
+	<bean id="mongo" class="com.mongodb.Mongo">
+		<constructor-arg name="addr" ref="address" />
+		<constructor-arg name="options" ref="options" />
+	</bean>
+
+	<bean id="options" class="com.mongodb.MongoOptions">
+		<property name="connectionsPerHost" value="${mongo.db.pool.size}" />
+		<property name="maxWaitTime" value="${mongo.db.pool.maxwait}" />
+	</bean>
+
+	<bean id="address" class="com.mongodb.ServerAddress">
+		<constructor-arg name="host" value="${cron.mongo.db.host}" />
+		<constructor-arg name="port" value="${cron.mongo.db.port}" />
+	</bean>
+
+	<bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
+		<constructor-arg ref="mongo" />
+		<constructor-arg name="databaseName" value="${cron.mongo.db.name}" />
+		<!-- <property name="writeConcern" value="SAFE" /> Requires replication -->
+	</bean>
+
+	<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+		<property name="entityManagerFactory" ref="entityManagerFactory" />
+	</bean>
+
+	<bean id="entityManagerFactory"
+		class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="packagesToScan" value="com.philia" />
+		<property name="jpaVendorAdapter">
+			<bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+				<property name="database" value="MYSQL" />
+				<property name="generateDdl" value="true" />
+			</bean>
+		</property>
+	</bean>
+
+
+	<rabbit:connection-factory host="localhost" password="frog90805" username="khimung" id="connectionFactory" />
+
+	<rabbit:template id="amqpTemplate" connection-factory="connectionFactory"
+		exchange="myExchange" routing-key="profile-matches" message-converter="jsonMessageConverter" />
+
+	<rabbit:admin connection-factory="connectionFactory" />
+
+	<rabbit:queue name="profiles" />
+
+	<rabbit:topic-exchange name="myExchange">
+		<rabbit:bindings>
+			<rabbit:binding queue="profiles" pattern="foo.*" />
+		</rabbit:bindings>
+	</rabbit:topic-exchange>
+
+
+	<rabbit:listener-container
+		connection-factory="connectionFactory" message-converter="jsonMessageConverter">
+		<rabbit:listener ref="profileController" method="listen"
+			queue-names="profiles" />
+	</rabbit:listener-container>
+
+</beans>

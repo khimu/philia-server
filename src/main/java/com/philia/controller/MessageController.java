@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Resource;
 
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -55,8 +56,9 @@ public class MessageController {
      * @param message
      */
     @RequestMapping(value = "/message", method = RequestMethod.POST)
-    public void message(Message message) {
-    	CompletableFuture.runAsync(() -> messageService.createMessage(message));
+    public void message(@RequestBody Message message) {
+    	//CompletableFuture.runAsync(() -> messageService.createMessage(message));
+    	messageService.createMessage(message);
     }
     
 }

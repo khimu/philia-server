@@ -72,26 +72,27 @@
 	</bean>
 
 
-	<rabbit:connection-factory host="localhost" password="frog90805" username="khimung" id="connectionFactory" />
+	<rabbit:connection-factory host="localhost" password="frog90805" username="khimung" id="connectionFactory" channel-cache-size="10" />
 
+	<!-- routing-key must match to pattern : has nothing to do with the message itself or the class name of the message -->
 	<rabbit:template id="amqpTemplate" connection-factory="connectionFactory"
-		exchange="myExchange" routing-key="profile-matches" message-converter="jsonMessageConverter" />
+		exchange="myExchange"  queue="profiles" routing-key="com.philia.model.Profile" message-converter="jsonMessageConverter" />
 
 	<rabbit:admin connection-factory="connectionFactory" />
 
-	<rabbit:queue name="profiles" />
+	<rabbit:queue name="profiles"  />
 
 	<rabbit:topic-exchange name="myExchange">
 		<rabbit:bindings>
-			<rabbit:binding queue="profiles" pattern="*profile*" />
+			<rabbit:binding queue="profiles" pattern="com.philia.model.Profile" />
 		</rabbit:bindings>
 	</rabbit:topic-exchange>
 
 
 	<rabbit:listener-container
-		connection-factory="connectionFactory" message-converter="jsonMessageConverter">
-		<rabbit:listener ref="profileController" method="listen"
-			queue-names="profiles" />
+		connection-factory="connectionFactory"  concurrency="2" message-converter="jsonMessageConverter">
+		<rabbit:listener ref="profileController" method="listen"  queues="profiles" />
 	</rabbit:listener-container>
+
 
 </beans>

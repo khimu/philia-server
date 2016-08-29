@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.google.gson.Gson;
 import com.philia.entity.User;
 import com.philia.model.Profile;
 import com.philia.repository.UserRepository;
@@ -30,6 +31,11 @@ import com.philia.service.IProfileService;
 public class ProfileController {
 	
 	private final static Logger logger = Logger.getLogger(ProfileController.class);
+	
+	/*
+	 * According to stackoverflow this is thread safe
+	 */
+	private static final Gson gson = new Gson();
 	
 	@Resource
 	private IProfileService profileService;
@@ -83,12 +89,16 @@ public class ProfileController {
     	
     	profileService.saveProfile(profile);
 
+    	/*
     	CompletableFuture.runAsync(() -> {
-        	/*
+        	*
         	 * send enough information to make a match record
-        	 */
+        	 *
         	amqpTemplate.convertAndSend(profile);
     	});
+    	*/
+    	
+    	amqpTemplate.convertAndSend("myExchange", "com.philia.model.Profile", profile);
     	return retrievalKey;
     }
     
@@ -104,10 +114,27 @@ public class ProfileController {
      * 
      * http://107.170.234.144:15672/
      * 
+     * tail -f /var/log/rabbitmq/rabbit@ubuntu-1gb-sfo1-01.log
+     * 
      * By default, you should enable 5672 (rabbit mq port) and 4365 (empd port)
      */        
-    @RabbitListener(queues = "profiles")
-    public void listen(String foo) {
-    	logger.info("this is foo " + foo);
+    //@RabbitListener(queues = "profiles", containerFactory="connectionFactory")
+    public void listen(Profile profile) {
+    	logger.info("Calling listen");
+    	
+    	if(profile == null) {
+    		logger.info("profile is null");
+    	}
+    	else {
+    		logger.info("profile is not null");
+    		
+    		logger.info("profile name is " + profile.getFirstName());
+    	}
+    	
+    	//logger.info("this is foo " + foo);
+    	
+    	//Profile profile = gson.fromJson(foo, Profile.class);
+    	
+    	// now run the match logic for this profile
 	}
 }

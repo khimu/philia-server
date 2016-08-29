@@ -199,10 +199,13 @@ public class MessageService implements IMessageService {
 	
 	public MailBox getMailBox(String userId) {
     	MailBox foundBox = mongoTemplate.findOne(Query.query(Criteria.where("user_id").is(userId)), MailBox.class);
-    	MailBox result = new MailBox();
+    	MailBox result = new MailBox();    	
     	result.setUserId(userId);
-    	List<Mails> mails = foundBox.getMails().stream().filter(m -> m.getDeleted() == 0).collect(Collectors.toList());
-    	result.setMails(mails);
+
+    	if(foundBox != null) {
+    		List<Mails> mails = foundBox.getMails().stream().filter(m -> m.getDeleted() == 0).collect(Collectors.toList());
+    		result.setMails(mails);
+    	}
     	return result;
 	}
 	

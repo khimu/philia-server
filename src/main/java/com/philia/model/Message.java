@@ -19,9 +19,14 @@ public class Message extends Base {
 	
 	private String message;
 	
-	
+	/*
+	 * from user id
+	 */
 	private String from;
 
+	/*
+	 * to user id
+	 */
 	private String to;
 	
 	
@@ -30,10 +35,20 @@ public class Message extends Base {
 	
 	private String fromFirstName;
 	
-	
+	/*
+	 * forgot what read is for;
+	 * 
+	 * 0 = already read
+	 * 1 = have not read
+	 */
 	private Integer read = 0;
 	
-	
+	/*
+	 * forgot what deleted is for
+	 * 
+	 * 0 = active
+	 * 1 = deleted
+	 */
 	private Integer deleted = 0;
 	
 	

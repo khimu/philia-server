@@ -4,6 +4,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
+import javax.persistence.Version;
 
 @Entity
 @Table(name="user")
@@ -31,6 +32,8 @@ public class User extends AbstractEntity  {
 	private String country;
 
 	private Integer age;
+	
+	private boolean enabled = true;
 
 	/*
 	 * Path to physical image
@@ -40,6 +43,9 @@ public class User extends AbstractEntity  {
 	
 	@Column(name = "blurred_image")
 	private String blurredImage;
+	
+	@Version
+	private int version;
 	
 	public User() {}
 
@@ -143,6 +149,22 @@ public class User extends AbstractEntity  {
 
 	public void setAge(Integer age) {
 		this.age = age;
+	}
+
+	public boolean isEnabled() {
+		return enabled;
+	}
+
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
+	}
+
+	public int getVersion() {
+		return version;
+	}
+
+	public void setVersion(int version) {
+		this.version = version;
 	}
 
 }

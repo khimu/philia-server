@@ -14,6 +14,10 @@ public class BitMaskTest {
 	
 	@Test
 	public void testBitAnd() {
+
+		int x = 4 & 3;
+		System.out.println(x);
+		
 		// enable the preference
 		preference = married | preference;
 		System.out.println( preference);

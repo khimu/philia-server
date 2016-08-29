@@ -21,7 +21,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @SpringBootApplication(exclude = { MongoDataAutoConfiguration.class, DataSourceAutoConfiguration.class, HibernateJpaAutoConfiguration.class,
 		DataSourceTransactionManagerAutoConfiguration.class })
 @EnableTransactionManagement
-@Import(Config.class)
+@Import(value = {Config.class, OauthConfig.class})
 public class Application {
 
 	public static void main(String[] args) {

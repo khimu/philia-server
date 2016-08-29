@@ -83,7 +83,7 @@
 
 	<rabbit:topic-exchange name="myExchange">
 		<rabbit:bindings>
-			<rabbit:binding queue="profiles" pattern="foo.*" />
+			<rabbit:binding queue="profiles" pattern="*profile*" />
 		</rabbit:bindings>
 	</rabbit:topic-exchange>
 

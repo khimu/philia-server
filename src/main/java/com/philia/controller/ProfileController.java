@@ -97,6 +97,15 @@ public class ProfileController {
     	return profileService.findByUser(userId);
     }
     
+    
+    /*
+     * username: guest
+     * password: guest
+     * 
+     * http://107.170.234.144:15672/
+     * 
+     * By default, you should enable 5672 (rabbit mq port) and 4365 (empd port)
+     */        
     @RabbitListener(queues = "profiles")
     public void listen(String foo) {
     	logger.info("this is foo " + foo);

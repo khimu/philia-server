@@ -131,10 +131,13 @@ public class ProfileController {
     		logger.info("profile name is " + profile.getFirstName());
     	}
     	
-    	//logger.info("this is foo " + foo);
-    	
-    	//Profile profile = gson.fromJson(foo, Profile.class);
-    	
-    	// now run the match logic for this profile
+    	/*
+    	 * TODO
+    	 * 
+    	 * Query mongodb for all profile where x = x, y=y, etc
+    	 * Create Match for given profile, Create List<Matches> and save 
+    	 * Create Matches and update List<Matches> for each List<Profile> that matches given profile
+    	 * 
+    	 */
 	}
 }

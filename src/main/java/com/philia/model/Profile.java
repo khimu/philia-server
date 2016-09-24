@@ -41,6 +41,9 @@ public class Profile extends Base {
 	 */
 	@Field(value="dating_intension")
 	private Integer datingIntension = 0;
+	
+	@Field(value="gender")
+	private Integer gender = 0;
 
 	private String city;
 	
@@ -167,6 +170,14 @@ public class Profile extends Base {
 
 	public void setAge(String age) {
 		this.age = age;
+	}
+
+	public Integer getGender() {
+		return gender;
+	}
+
+	public void setGender(Integer gender) {
+		this.gender = gender;
 	}
 
 	public String getBlurredImage() {

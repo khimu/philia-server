@@ -7,6 +7,7 @@ public class InterviewTest {
 	
 	@Test
 	public void testThis() {
+		
 		MyChar charOne = new MyChar("TOP");
 		MyChar charTwo = new MyChar("POT");
 		
@@ -26,6 +27,17 @@ public class InterviewTest {
 		MyChar charFour = new MyChar("SCA");
 		
 		Assert.assertTrue(charThree.equals(charFour));
+		
+		MyChar charFive = new MyChar("bce");
+		
+		Assert.assertFalse(charFive.equals(charFour));
+		
+		MyChar charSix = new MyChar("abc");
+		
+		Assert.assertFalse(charFive.equals(charSix));
+		
+		MyChar charSeven = new MyChar("A");
+		System.out.println("charSeven:  " + charSeven.hashCode());
 	}
 	
 	class MyChar {
@@ -37,7 +49,7 @@ public class InterviewTest {
 		
 		@Override
 		public int hashCode() {
-			return bytearray2intarray(this.theChar.getBytes());
+			return theChar.length() * bytearray2intarray(this.theChar.getBytes());
 		}
 		
 		@Override

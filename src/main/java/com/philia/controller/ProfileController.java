@@ -1,13 +1,12 @@
 package com.philia.controller;
 
 import java.util.Date;
-import java.util.concurrent.CompletableFuture;
+import java.util.List;
 
 import javax.annotation.Resource;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.log4j.Logger;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,8 +17,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.google.gson.Gson;
 import com.philia.entity.User;
+import com.philia.model.Match;
 import com.philia.model.Profile;
 import com.philia.repository.UserRepository;
+import com.philia.service.IMatchService;
 import com.philia.service.IProfileService;
 
 /**
@@ -39,6 +40,9 @@ public class ProfileController {
 	
 	@Resource
 	private IProfileService profileService;
+	
+	@Resource
+	private IMatchService matchService;
 	
 	@Resource
 	private UserRepository userRepository;
@@ -121,16 +125,7 @@ public class ProfileController {
     //@RabbitListener(queues = "profiles", containerFactory="connectionFactory")
     public void listen(Profile profile) {
     	logger.info("Calling listen");
-    	
-    	if(profile == null) {
-    		logger.info("profile is null");
-    	}
-    	else {
-    		logger.info("profile is not null");
-    		
-    		logger.info("profile name is " + profile.getFirstName());
-    	}
-    	
+    	    	
     	/*
     	 * TODO
     	 * 
@@ -138,6 +133,33 @@ public class ProfileController {
     	 * Create Match for given profile, Create List<Matches> and save 
     	 * Create Matches and update List<Matches> for each List<Profile> that matches given profile
     	 * 
-    	 */
+    	 */    	
+    	int start = 0;
+    	List<Profile> profiles = null;
+    	do {
+    		
+    		profiles = profileService.findAllMatches(start, profile);
+    		
+    		for(Profile p : profiles) {
+	    		Match userMatch = new Match();
+	    		userMatch.setUserId(profile.getUserId());
+	    		userMatch.setMatchedWithUserId(p.getUserId());
+	    		userMatch.setCreated(new Date());
+	    		userMatch.setWeight(100);
+	    		userMatch.setClearImage(profile.getClearImage());
+	    		userMatch.setBlurredImage(profile.getBlurredImage());
+
+	    		Match matchMatchUser = new Match();
+	    		matchMatchUser.setUserId(p.getUserId());
+	    		matchMatchUser.setMatchedWithUserId(profile.getUserId());
+	    		userMatch.setCreated(new Date());
+	    		userMatch.setWeight(100);
+	    		userMatch.setClearImage(p.getClearImage());
+	    		userMatch.setBlurredImage(p.getBlurredImage());
+	    		
+	    		matchService.saveMatch(userMatch, matchMatchUser, profile.getUserId(), p.getUserId());
+    		}
+    		start += 100;
+    	} while (profiles != null && (profiles.size() > 0));
 	}
 }

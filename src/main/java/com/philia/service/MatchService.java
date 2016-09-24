@@ -7,7 +7,9 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.unwi
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.skip;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.limit;
 
+import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 
@@ -16,10 +18,17 @@ import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Component;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
+import com.philia.model.Conversation;
+import com.philia.model.MailBox;
+import com.philia.model.Mails;
 import com.philia.model.Match;
 import com.philia.model.Matches;
+import com.philia.model.Message;
 
 @Component("matchService")
 public class MatchService implements IMatchService {
@@ -27,6 +36,71 @@ public class MatchService implements IMatchService {
 	@Resource
 	private MongoOperations mongoTemplate;
 	
+	/**
+	 * Found a profile that matches the new user's profile and therefore saving a match record for each of the user's that
+	 * point to each other as a match
+	 * 
+	 * @param matchUser			The new user getting created
+	 * @param matchMatchUser	The user that matches to the new user
+	 * @param userId			The new user's user id
+	 * @param matchUserId		The matching user's user id
+	 */
+	public void saveMatch(Match matchUser, Match matchMatchUser, String userId, String matchUserId) {
+				
+		/*
+		 * save message to mongo
+		 */
+		mongoTemplate.save(matchUser);
+		mongoTemplate.save(matchMatchUser);
+		
+		boolean userMatchesExist = mongoTemplate.exists(Query.query(Criteria.where("user_id").is(userId)), Matches.class);
+		boolean matchMatchesExist = mongoTemplate.exists(Query.query(Criteria.where("user_id").is(matchUserId)), Matches.class);
+		   	
+    	if(userMatchesExist == false) {
+    		Matches box = new Matches();
+    		box.setUserId(userId);
+    		box.getMatches().add(matchMatchUser);
+    		createMatches(box, matchUserId);
+    	}
+    	else {
+    		addMatch(matchUser, matchUserId);
+    	}
+    	
+    	if(matchMatchesExist == false) {
+    		Matches box = new Matches();
+    		box.setUserId(matchUserId);
+    		box.getMatches().add(matchUser);
+    		createMatches(box, userId);
+    	}
+    	else {
+    		addMatch(matchMatchUser, userId);
+    	}
+    	
+	}
+	
+	private void createMatches(Matches matches, String userId) {
+    	//build update
+    	DBObject dbDoc = new BasicDBObject();
+    	mongoTemplate.getConverter().write(matches, dbDoc); //it is the one spring use for convertions.
+    	Update update = Update.fromDBObject(dbDoc);
+
+    	mongoTemplate.upsert(Query.query(Criteria.where("user_id").is(userId)), 
+    			update, Matches.class);
+	}
+	
+	private void addMatch(Match match, String userId) {
+    	mongoTemplate.updateFirst(Query.query(Criteria.where("user_id").is(userId)), 
+    			new Update().push("matches", match), Matches.class);
+	}
+	
+	public Matches getMatches(String userId) {
+    	return mongoTemplate.findOne(Query.query(Criteria.where("user_id").is(userId)), Matches.class);
+	}
+	
+	
+	/**
+	 * Support client matches view
+	 */
 	public List<Match> getNewMatches(String userId, int start) {
 		List<Match> matches = mongoTemplate.find(Query.query(Criteria.where("user_id").is(userId)).skip(start).limit(100), Match.class);
 

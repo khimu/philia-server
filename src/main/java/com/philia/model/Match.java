@@ -22,12 +22,15 @@ import org.springframework.data.mongodb.core.mapping.Field;
 public class Match extends Base {
 
 	private static final long serialVersionUID = 1L;
+	
+	@Field(value="user_id")
+	private String userId;
 
 	/*
 	 * The user id that matches to the user that this match record belongs to
 	 */
 	@Field(value="matched_with_user_id")
-	private BigInteger matchedWithUserId;
+	private String matchedWithUserId;
 
 	/*
 	 * how far has the matcher gone with the matchee
@@ -53,11 +56,19 @@ public class Match extends Base {
 	@Field(value="blurred_image")
 	private String blurredImage;
 
-	public BigInteger getMatchedWithUserId() {
+	public String getUserId() {
+		return userId;
+	}
+
+	public void setUserId(String userId) {
+		this.userId = userId;
+	}
+
+	public String getMatchedWithUserId() {
 		return matchedWithUserId;
 	}
 
-	public void setMatchedWithUserId(BigInteger matchedWithUserId) {
+	public void setMatchedWithUserId(String matchedWithUserId) {
 		this.matchedWithUserId = matchedWithUserId;
 	}
 

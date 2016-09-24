@@ -8,4 +8,6 @@ public interface IMatchService {
 
 	public List<Match> getNewMatches(String userId, int start);
 	
+	public void saveMatch(Match matchUser, Match matchMatchUser, String userId, String matchUserId);
+	
 }

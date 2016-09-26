@@ -1,18 +1,17 @@
 package com.philia.service;
 
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.limit;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.project;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.unwind;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.skip;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.limit;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.unwind;
 
-import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 
+import org.apache.log4j.Logger;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
@@ -23,15 +22,13 @@ import org.springframework.stereotype.Component;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
-import com.philia.model.Conversation;
-import com.philia.model.MailBox;
-import com.philia.model.Mails;
 import com.philia.model.Match;
 import com.philia.model.Matches;
-import com.philia.model.Message;
 
 @Component("matchService")
 public class MatchService implements IMatchService {
+	
+	private final static Logger logger = Logger.getLogger(MatchService.class);
 	
 	@Resource
 	private MongoOperations mongoTemplate;
@@ -55,25 +52,32 @@ public class MatchService implements IMatchService {
 		
 		boolean userMatchesExist = mongoTemplate.exists(Query.query(Criteria.where("user_id").is(userId)), Matches.class);
 		boolean matchMatchesExist = mongoTemplate.exists(Query.query(Criteria.where("user_id").is(matchUserId)), Matches.class);
+		
+		logger.info("userMatchesExist " + userMatchesExist);
+		logger.info("matchMatchesExist " + matchMatchesExist);
 		   	
     	if(userMatchesExist == false) {
+    		logger.info("creating matches for  " + userId);
     		Matches box = new Matches();
     		box.setUserId(userId);
-    		box.getMatches().add(matchMatchUser);
-    		createMatches(box, matchUserId);
-    	}
-    	else {
-    		addMatch(matchUser, matchUserId);
-    	}
-    	
-    	if(matchMatchesExist == false) {
-    		Matches box = new Matches();
-    		box.setUserId(matchUserId);
     		box.getMatches().add(matchUser);
     		createMatches(box, userId);
     	}
     	else {
-    		addMatch(matchMatchUser, userId);
+    		logger.info("creating matches for  " + userId + " with " + matchUser.getUserId());
+    		addMatch(matchUser, userId);
+    	}
+    	
+    	if(matchMatchesExist == false) {
+    		logger.info("creating matches for  " + matchUserId);
+    		Matches box = new Matches();
+    		box.setUserId(matchUserId);
+    		box.getMatches().add(matchMatchUser);
+    		createMatches(box, matchUserId);
+    	}
+    	else {
+    		logger.info("creating matches for  " + matchUserId + " with " + matchMatchUser.getUserId());
+    		addMatch(matchMatchUser, matchUserId);
     	}
     	
 	}
@@ -109,10 +113,12 @@ public class MatchService implements IMatchService {
 				unwind("matches"), //
 				match(Criteria.where("matches.stage").is(0)),
 				project().and("matches.matchedWithUserId").as("matched_with_user_id")
-				.and("mails.weight").as("weight")
-				.and("mails.created").as("created")
-				.and("mails.blurredImage").as("blurred_image")
-				.and("mails.clearImage").as("clear_image"),
+				.and("matches.userId").as("user_id")
+				.and("matches.stage").as("stage")
+				.and("matches.weight").as("weight")
+				.and("matches.created").as("created")
+				.and("matches.blurredImage").as("blurred_image")
+				.and("matches.clearImage").as("clear_image"),
 				skip(start),
 				limit(100)				
 		);
@@ -120,36 +126,6 @@ public class MatchService implements IMatchService {
 		AggregationResults<Match> results = mongoTemplate.aggregate(agg, Match.class);
 
 		return results.getMappedResults();
-		
-		/*
-		 * 
-		 * db.mailbox.aggregate(
-    // Initial document match (uses index, if a suitable one is available)
-    { $match: {
-        'user_id': "2"
-    }},
-
-    // Convert embedded array into stream of documents
-    { $unwind: '$mails' },
-
-    // Only match scores of interest from the subarray
-    { $match: {
-        'mails.deleted' : 0
-    }},
-
-    // Note: Could add a `$group` by _id here if multiple matches are expected
-
-    // Final projection: exclude fields with 0, include fields with 1
-    { $project: {
-        _id: 0,
-        conversation_id: "$mails.conversation_id"
-    }}
-)
-		 */
-		
-		
-		 
-		//public final static int SEEN = 1 << 0; // 1
 	}
 	
 }

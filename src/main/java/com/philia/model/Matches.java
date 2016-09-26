@@ -1,8 +1,8 @@
 package com.philia.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -39,6 +39,9 @@ public class Matches extends Base {
 	}
 
 	public List<Match> getMatches() {
+		if(matches == null) {
+			matches = new ArrayList<Match>();
+		}
 		return matches;
 	}
 

@@ -125,41 +125,57 @@ public class ProfileController {
     //@RabbitListener(queues = "profiles", containerFactory="connectionFactory")
     public void listen(Profile profile) {
     	logger.info("Calling listen");
-    	    	
-    	/*
-    	 * TODO
-    	 * 
-    	 * Query mongodb for all profile where x = x, y=y, etc
-    	 * Create Match for given profile, Create List<Matches> and save 
-    	 * Create Matches and update List<Matches> for each List<Profile> that matches given profile
-    	 * 
-    	 */    	
-    	int start = 0;
-    	List<Profile> profiles = null;
-    	do {
-    		
-    		profiles = profileService.findAllMatches(start, profile);
-    		
-    		for(Profile p : profiles) {
-	    		Match userMatch = new Match();
-	    		userMatch.setUserId(profile.getUserId());
-	    		userMatch.setMatchedWithUserId(p.getUserId());
-	    		userMatch.setCreated(new Date());
-	    		userMatch.setWeight(100);
-	    		userMatch.setClearImage(profile.getClearImage());
-	    		userMatch.setBlurredImage(profile.getBlurredImage());
-
-	    		Match matchMatchUser = new Match();
-	    		matchMatchUser.setUserId(p.getUserId());
-	    		matchMatchUser.setMatchedWithUserId(profile.getUserId());
-	    		userMatch.setCreated(new Date());
-	    		userMatch.setWeight(100);
-	    		userMatch.setClearImage(p.getClearImage());
-	    		userMatch.setBlurredImage(p.getBlurredImage());
+    	
+    	if(profile != null) {
+    		logger.info("profile user id " + profile.getUserId());
+	    	/*
+	    	 * TODO
+	    	 * 
+	    	 * Query mongodb for all profile where x = x, y=y, etc
+	    	 * Create Match for given profile, Create List<Matches> and save 
+	    	 * Create Matches and update List<Matches> for each List<Profile> that matches given profile
+	    	 * 
+	    	 */    	
+	    	int start = 0;
+	    	List<Profile> profiles = null;
+	    	do {
 	    		
-	    		matchService.saveMatch(userMatch, matchMatchUser, profile.getUserId(), p.getUserId());
-    		}
-    		start += 100;
-    	} while (profiles != null && (profiles.size() > 0));
+	    		try {
+		    		profiles = profileService.findAllMatches(start, profile);
+		    		
+		    		logger.info("profiles size: " + profiles.size());
+		    		
+		    		if(profiles != null) {
+			    		for(Profile p : profiles) {
+			    			logger.info("matching profile user id " + p.getUserId());
+				    		Match userMatch = new Match();
+				    		userMatch.setUserId(profile.getUserId());
+				    		userMatch.setMatchedWithUserId(p.getUserId());
+				    		userMatch.setCreated(new Date());
+				    		userMatch.setWeight(100);
+				    		userMatch.setClearImage(profile.getClearImage());
+				    		userMatch.setBlurredImage(profile.getBlurredImage());
+			
+				    		Match matchMatchUser = new Match();
+				    		matchMatchUser.setUserId(p.getUserId());
+				    		matchMatchUser.setMatchedWithUserId(profile.getUserId());
+				    		userMatch.setCreated(new Date());
+				    		userMatch.setWeight(100);
+				    		userMatch.setClearImage(p.getClearImage());
+				    		userMatch.setBlurredImage(p.getBlurredImage());
+				    		
+				    		matchService.saveMatch(userMatch, matchMatchUser, profile.getUserId(), p.getUserId());
+			    		}
+		    		}	    		
+	    		}catch(Exception e) {
+	    			logger.error("Unable to find matches for " + profile.getUserId() + " due to " + e.getMessage());
+	    		}
+	    		
+	    		start += 100;
+	    	} while (profiles != null && (profiles.size() > 0));
+    	} 
+    	else {
+    		logger.warn("profile is null");
+    	}
 	}
 }

@@ -13,6 +13,11 @@ public class BitMaskTest {
 	private int religious = 16;
 	
 	@Test
+	public void testTh() {
+		System.out.println( (1%2) );
+	}
+	
+	@Test
 	public void testBitAnd() {
 		// enable the preference
 		preference = married | preference;
